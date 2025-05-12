@@ -534,17 +534,17 @@ local success, err = pcall(function()
     end
 
     -- No-Clip Logic
-    --local function update_noclip()
-       -- local local_char = local_player.Character
-        --if library.flags.noclip and library.flags.noclip_key then
-          --  local plr_model = local_char or local_player.CharacterAdded:Wait()
-          --  if plr_model then
-               -- for _, child in pairs(plr_model:GetDescendants()) do
-                  --  if child:IsA("BasePart") then
-                    --    child.CanCollide = false
-                   -- end
-               -- end
-         --   end
+    local function update_noclip()
+        local local_char = local_player.Character
+        if library.flags.noclip and library.flags.noclip_key then
+            local plr_model = local_char or local_player.CharacterAdded:Wait()
+            if plr_model then
+                for _, child in pairs(plr_model:GetDescendants()) do
+                   if child:IsA("BasePart") then
+                        child.CanCollide = false
+                   end
+                end
+            end
             -- Anti-Ban: Случайная задержка
             task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         else
