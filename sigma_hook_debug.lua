@@ -9,6 +9,17 @@ local success, err = pcall(function()
     local Workspace = game:GetService("Workspace")
     local HttpService = game:GetService("HttpService")
 
+    -- Anti-Ban: Обфускация переменных
+    getgenv().sigma_hook = {
+        enabled = true,
+        version = "v1",
+        anti_ban = {
+            spoof_id = HttpService:GenerateGUID(false),
+            random_delay = function() return math.random(0.05, 0.15) end,
+            max_cframe_change = 0.1, -- Максимальное изменение позиции за кадр
+        }
+    }
+
     print("Loading Tokyo UI Library...")
     local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua"))({
         cheatname = "sigma.hook",
@@ -32,6 +43,7 @@ local success, err = pcall(function()
     local Section2 = assist:AddSection("Misc", 2)
     local Section3 = visual:AddSection("Player esp", 1)
     local Section4 = visual:AddSection("World esp", 2)
+    local Section8 = visual:AddSection("Bots esp", 3)
     local Section5 = misc:AddSection("Rage", 1)
     local Section6 = misc:AddSection("Visuals", 2)
     local Section7 = misc:AddSection("Gun Mods", 3)
@@ -58,30 +70,6 @@ local success, err = pcall(function()
         noindicator = false,
         callback = function(state)
             library.flags.aimbot_toggle = state
-        end
-    })
-
-    Section1:AddToggle({
-        text = "Silent Aim",
-        flag = "silent_aim_toggle",
-        callback = function(state)
-            library:SendNotification("Silent Aim " .. (state and "Enabled" or "Disabled"), 6)
-        end
-    })
-
-    Section1:AddBind({
-        enabled = true,
-        text = "Silent Aim Keybind",
-        tooltip = "Hold to activate Silent Aim",
-        mode = "hold",
-        bind = "B",
-        flag = "silent_aim_bind",
-        state = false,
-        nomouse = false,
-        risky = false,
-        noindicator = false,
-        callback = function(state)
-            library.flags.silent_aim_toggle = state
         end
     })
 
@@ -173,19 +161,15 @@ local success, err = pcall(function()
     Section3:AddToggle({ text = "Enable Skeletons", flag = "enable_skeletons" })
     Section3:AddSlider({ text = "Skeleton Thickness", flag = "skeleton_thickness", min = 1, max = 5, value = 2 })
 
+    -- Adding Bots ESP to Section8
+    Section8:AddToggle({ text = "Soldier Name", flag = "soldier_Name" })
+    Section8:AddToggle({ text = "Boss Name", flag = "boss_Name" })
+    Section8:AddToggle({ text = "Show Health", flag = "soldier_Health" })
+    Section8:AddToggle({ text = "Show Distance", flag = "soldier_Distance" })
+    Section8:AddColor({ text = "Soldier Color", flag = "soldier_Color", value = Color3.fromRGB(255, 255, 255) })
+    Section8:AddColor({ text = "Boss Color", flag = "boss_Color", value = Color3.fromRGB(255, 0, 0) })
+
     -- Adding toggles, binds, and sliders to Section5 (Rage)
-    Section5:AddToggle({ text = "Speed Hack", flag = "speed_hack_toggle" })
-    Section5:AddBind({
-        enabled = true,
-        text = "Speed Hack Keybind",
-        mode = "hold",
-        bind = "Q",
-        flag = "speed_hack_bind",
-        callback = function(state)
-            library.flags.speed_hack_bind = state
-        end
-    })
-    Section5:AddSlider({ text = "Speed Hack Value", flag = "speed_hack_value", min = 0, max = 70, value = 30 })
     Section5:AddToggle({ text = "Fly", flag = "fly_toggle" })
     Section5:AddBind({
         enabled = true,
@@ -218,6 +202,17 @@ local success, err = pcall(function()
         flag = "noclip_key",
         callback = function(state)
             library.flags.noclip_key = state
+        end
+    })
+    Section5:AddToggle({ text = "Underground", flag = "underground_toggle" })
+    Section5:AddBind({
+        enabled = true,
+        text = "Underground Keybind",
+        mode = "toggle",
+        bind = "V",
+        flag = "underground_bind",
+        callback = function(state)
+            library.flags.underground_bind = state
         end
     })
 
@@ -374,7 +369,8 @@ local success, err = pcall(function()
     local function update_fly()
         local character = local_player.Character
         local root = character and character:FindFirstChild("HumanoidRootPart")
-        if not root then
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        if not root or not humanoid then
             if fly_hack.velocity and fly_hack.velocity.Parent then
                 fly_hack.velocity:Destroy()
                 fly_hack.velocity = nil
@@ -397,15 +393,23 @@ local success, err = pcall(function()
             if move_direction.Magnitude > 0 then move_direction = move_direction.Unit end
             local fly_speed = math.max(library.flags.fly_speed_value, 10)
             fly_hack.velocity.Velocity = move_direction * fly_speed
+            -- Fix walking animation
+            humanoid.PlatformStand = true
+            -- Anti-Ban: Ограничение скорости
+            if fly_speed > 50 then
+                fly_hack.velocity.Velocity = move_direction * 50
+            end
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         else
             if fly_hack.velocity and fly_hack.velocity.Parent then
                 fly_hack.velocity:Destroy()
                 fly_hack.velocity = nil
             end
+            humanoid.PlatformStand = false
         end
     end
 
-    -- Aimbot and Silent Aim Logic
+    -- Aimbot Logic
     local target_enhancements = {
         target = {
             entry = nil,
@@ -483,30 +487,11 @@ local success, err = pcall(function()
             if library.flags.aimbot_toggle and (aiming or library.flags.aimbot_bind) then
                 local enemy_pos = target_enhancements.target.part.Position
                 camera.CFrame = library.flags.aimbot_speed ~= 1 and camera.CFrame:Lerp(CFrame.lookAt(camera.CFrame.Position, enemy_pos), library.flags.aimbot_speed) or CFrame.lookAt(camera.CFrame.Position, enemy_pos)
+                -- Anti-Ban: Случайная задержка
+                task.wait(getgenv().sigma_hook.anti_ban.random_delay())
             end
         end
     end
-
-    -- Silent Aim Hook (Disabled for compatibility)
-    --[[
-    local old_silent_namecall
-    if hookmetamethod then
-        old_silent_namecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if not checkcaller() and method == "FindPartOnRayWithIgnoreList" and library.flags.silent_aim_toggle and target_enhancements.target.part then
-                local args = {...}
-                local ray = args[1]
-                local ignore_list = args[2]
-                local target_head = target_enhancements.target.part
-                local direction = (target_head.Position - ray.Origin).Unit * 1000
-                return target_head, target_head.Position, Vector3.new(0, 1, 0), target_head.Material
-            end
-            return old_silent_namecall(self, ...)
-        end)
-    else
-        library:SendNotification("Warning: Silent Aim __namecall hook not supported by this executor", 6)
-    end
-    --]]
 
     -- FOV Circle Logic
     local fov_circle = {
@@ -517,7 +502,7 @@ local success, err = pcall(function()
 
     do
         local FieldOfView = Instance.new("ScreenGui")
-        FieldOfView.Parent = game:GetService("CoreGui") -- Replaced cloneref for compatibility
+        FieldOfView.Parent = game:GetService("CoreGui")
         FieldOfView.IgnoreGuiInset = true
         local Frame = Instance.new("Frame")
         Frame.Visible = false
@@ -548,81 +533,20 @@ local success, err = pcall(function()
         end
     end
 
-    -- Speed Hack Logic
-    local speed_hack = {
-        speedhack = nil,
-        text = nil,
-        default_speed = 16,
-        error_reported = false
-    }
-
-    local function init_speed_hack()
-        if speed_hack.speedhack and speed_hack.speedhack.Parent then return end
-        local success, result = pcall(function()
-            local speedhack = Instance.new("ScreenGui")
-            speedhack.Parent = game:GetService("CoreGui")
-            speedhack.IgnoreGuiInset = true
-            local text = Instance.new("TextLabel")
-            text.BackgroundTransparency = 0
-            text.AnchorPoint = Vector2.new(0.5, 0.5)
-            text.BorderSizePixel = 0
-            text.ZIndex = 2
-            text.Position = UDim2.new(0.5, 0, 0.5, 0)
-            text.TextColor3 = Color3.fromRGB(255, 255, 0)
-            text.TextStrokeTransparency = 0
-            text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            text.TextSize = 9
-            text.Font = Enum.Font.SourceSans
-            text.Text = "SpeedHack"
-            text.Parent = speedhack
-            speed_hack.speedhack = speedhack
-            speed_hack.text = text
-            speed_hack.speedhack.Enabled = false
-        end)
-        if not success and not speed_hack.error_reported then
-            speed_hack.error_reported = true
-            library:SendNotification("Failed to initialize SpeedHack UI: " .. tostring(result), 6)
-        end
-    end
-
-    init_speed_hack()
-
-    local function update_speed_hack()
-        local character = local_player.Character
-        local humanoid = character and character:FindFirstChild("Humanoid")
-        if not humanoid then
-            if speed_hack.speedhack and speed_hack.speedhack.Parent then
-                speed_hack.speedhack.Enabled = false
-            end
-            return
-        end
-        if library.flags.speed_hack_toggle and library.flags.speed_hack_bind then
-            humanoid.WalkSpeed = math.max(library.flags.speed_hack_value, speed_hack.default_speed)
-            if speed_hack.speedhack and speed_hack.speedhack.Parent then
-                speed_hack.speedhack.Enabled = true
-            elseif not speed_hack.error_reported then
-                init_speed_hack()
-            end
-        else
-            humanoid.WalkSpeed = speed_hack.default_speed
-            if speed_hack.speedhack and speed_hack.speedhack.Parent then
-                speed_hack.speedhack.Enabled = false
-            end
-        end
-    end
-
     -- No-Clip Logic
-    local function update_noclip()
-        local local_char = local_player.Character
-        if library.flags.noclip and library.flags.noclip_key then
-            local plr_model = local_char or local_player.CharacterAdded:Wait()
-            if plr_model then
-                for _, child in pairs(plr_model:GetDescendants()) do
-                    if child:IsA("BasePart") then
-                        child.CanCollide = false
-                    end
-                end
-            end
+    --local function update_noclip()
+       -- local local_char = local_player.Character
+        --if library.flags.noclip and library.flags.noclip_key then
+          --  local plr_model = local_char or local_player.CharacterAdded:Wait()
+          --  if plr_model then
+               -- for _, child in pairs(plr_model:GetDescendants()) do
+                  --  if child:IsA("BasePart") then
+                    --    child.CanCollide = false
+                   -- end
+               -- end
+         --   end
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         else
             local plr_model = local_char
             if plr_model then
@@ -686,12 +610,14 @@ local success, err = pcall(function()
             if uis:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -1, 0) end
             if move.Magnitude > 0 then
                 camera.CFrame = camera.CFrame + (camera.CFrame - camera.CFrame.Position):VectorToWorldSpace(
-                    move.Unit * library.flags.free_cam_speed
+                    move.Unit * math.min(library.flags.free_cam_speed, 5) -- Anti-Ban: Ограничение скорости
                 )
             end
             if local_char and local_char:FindFirstChild("HumanoidRootPart") then
                 local_char.HumanoidRootPart.CFrame = camera.CFrame
             end
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         end
     end
 
@@ -718,6 +644,8 @@ local success, err = pcall(function()
             local offset = root.CFrame.LookVector * -distance + Vector3.new(0, 2, 0)
             local camera_pos = root.Position + offset
             camera.CFrame = CFrame.new(camera_pos, root.Position)
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         else
             if third_person.enabled then
                 third_person.enabled = false
@@ -756,7 +684,7 @@ local success, err = pcall(function()
 
     local function createClone(character, color)
         local replica = Instance.new("Model")
-        replica.Name = "ForcefieldClone"
+        replica.Name = "ForcefieldClone_" .. getgenv().sigma_hook.anti_ban.spoof_id -- Anti-Ban: Уникальное имя
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
                 local clone = Instance.new("Part")
@@ -835,13 +763,16 @@ local success, err = pcall(function()
                 if dist > MAX_DISTANCE then
                     newPos = remake.startPosition + (newPos - remake.startPosition).Unit * MAX_DISTANCE
                 end
-                root.CFrame = CFrame.new(newPos)
+                -- Anti-Ban: Плавное изменение позиции
+                root.CFrame = root.CFrame:Lerp(CFrame.new(newPos), getgenv().sigma_hook.anti_ban.max_cframe_change)
                 remake.remakePosition = newPos
                 if SHOW_DISTANCE_TEXT then
                     local d = (remake.remakePosition - remake.startPosition).Magnitude
                     remake.distanceText.Text = string.format("Manipulating: %.2f", d)
                     remake.distanceText.Color = Color3.new(1, 1, 1)
                 end
+                -- Anti-Ban: Случайная задержка
+                task.wait(getgenv().sigma_hook.anti_ban.random_delay())
             end
         end
     end
@@ -872,6 +803,8 @@ local success, err = pcall(function()
             camera.CameraType = camera_settings.default_type or Enum.CameraType.Custom
             camera.CameraSubject = camera_settings.default_subject or local_player.Character and local_player.Character:FindFirstChild("Humanoid")
         end
+        -- Anti-Ban: Случайная задержка
+        task.wait(getgenv().sigma_hook.anti_ban.random_delay())
     end
 
     local function init_camera_settings()
@@ -883,6 +816,131 @@ local success, err = pcall(function()
         end
     end
     init_camera_settings()
+
+    -- Underground Logic
+    getgenv().underground = -1.9
+    local underground_enabled = false
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://13435049596"
+    local danceTrack
+    local dysenc = {}
+    local temp = 1
+
+    local function update_underground()
+        if library.flags.underground_toggle and library.flags.underground_bind then
+            if not underground_enabled then
+                underground_enabled = true
+                pcall(function()
+                    danceTrack = local_player.Character:FindFirstChildWhichIsA("Humanoid"):LoadAnimation(animation)
+                    danceTrack.Looped = true
+                    danceTrack:Play()
+                end)
+            end
+            if local_player.Character and local_player.Character.PrimaryPart then
+                dysenc[1] = local_player.Character.PrimaryPart.CFrame
+                dysenc[2] = local_player.Character.PrimaryPart.AssemblyLinearVelocity
+                local SpoofThis = local_player.Character.PrimaryPart.CFrame
+                SpoofThis = (SpoofThis + Vector3.new(0, getgenv().underground, 0)) * CFrame.Angles(0, 0, 0)
+                local_player.Character.PrimaryPart.CFrame = SpoofThis
+                RunService.RenderStepped:Wait()
+                if local_player.Character and local_player.Character.PrimaryPart then
+                    local_player.Character.PrimaryPart.CFrame = dysenc[1]
+                    local_player.Character.PrimaryPart.AssemblyLinearVelocity = dysenc[2]
+                end
+            end
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
+        else
+            if underground_enabled then
+                underground_enabled = false
+                pcall(function()
+                    if danceTrack then
+                        danceTrack:Stop()
+                        danceTrack:Destroy()
+                    end
+                end)
+            end
+        end
+    end
+
+    -- Bots ESP Logic
+    local bot_drawings = {}
+
+    local function esp_for_character(character, nameFlag, healthFlag, distanceFlag, colorFlag)
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        local hum = character:FindFirstChild("Humanoid")
+        if not hrp or not hum then return end
+
+        local text = Drawing.new("Text")
+        text.Size = 14
+        text.Color = library.flags[colorFlag]
+        text.Outline = true
+        text.Center = true
+        text.Visible = false
+
+        bot_drawings[character] = text
+
+        local conn
+        conn = RunService.RenderStepped:Connect(function()
+            if not character:IsDescendantOf(workspace) or hum.Health <= 0 then
+                text:Remove()
+                bot_drawings[character] = nil
+                conn:Disconnect()
+                return
+            end
+
+            if (character.Name:lower() == "soldier" and not library.flags["soldier_Name"]) or 
+               ((character.Name == "Bruno" or character.Name == "Boris") and not library.flags["boss_Name"]) then
+                text.Visible = false
+            else
+                local head_pos = hrp.Position + Vector3.new(0, 3, 0)
+                local text_screen, on_screen = camera:WorldToViewportPoint(head_pos)
+
+                local displayText = ""
+                if library.flags[nameFlag] then 
+                    displayText = displayText .. character.Name 
+                end
+                if healthFlag and library.flags[healthFlag] then
+                    if character.Name:lower() == "soldier" then
+                        displayText = string.format("Soldier - %d HP", math.floor(hum.Health))
+                    else
+                        displayText = string.format("%s - %d HP", character.Name, math.floor(hum.Health))
+                    end
+                end
+                if distanceFlag and library.flags[distanceFlag] then
+                    local distance = math.floor((hrp.Position - camera.CFrame.Position).Magnitude)
+                    displayText = displayText .. string.format(" - %d s", distance)
+                end
+
+                text.Position = Vector2.new(text_screen.X, text_screen.Y)
+                text.Text = displayText
+                text.Visible = on_screen
+                text.Color = library.flags[colorFlag]
+            end
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
+        end)
+    end
+
+    local function initialize_bot_esp()
+        local function on_character_added(character)
+            if character:IsA("Model") and (character.Name:lower() == "soldier" or character.Name == "Bruno" or character.Name == "Boris") then
+                if character.Name:lower() == "soldier" then
+                    esp_for_character(character, "soldier_Name", "soldier_Health", "soldier_Distance", "soldier_Color")
+                elseif character.Name == "Bruno" or character.Name == "Boris" then
+                    esp_for_character(character, "boss_Name", "soldier_Health", "soldier_Distance", "boss_Color")
+                end
+            end
+        end
+
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            on_character_added(obj)
+        end
+
+        workspace.DescendantAdded:Connect(on_character_added)
+    end
+
+    initialize_bot_esp()
 
     -- Function to get the equipped tool
     local function get_tool(character)
@@ -1097,7 +1155,7 @@ local success, err = pcall(function()
                 end
                 if library.flags.show_tracer then
                     drawings.tracer.Visible = true
-                    drawings.tracer.From = Vector2.new(viewport_size.X / 2, viewport_size.Y / 2)
+                    drawings.tracer.From = Vector2.new(viewport_size.X / 2, viewport_size.Y)
                     drawings.tracer.To = Vector2.new(pos.X, pos.Y)
                     drawings.tracer.Color = Color3.fromRGB(255, 255, 255)
                 else
@@ -1118,32 +1176,34 @@ local success, err = pcall(function()
                 end
                 if on_screen and library.flags.enable_skeletons and character and character:FindFirstChild("UpperTorso") and character:FindFirstChild("HumanoidRootPart") then
                     local get_parts = {
-                        "UpperTorso",
-                        "LowerTorso",
-                        "LeftUpperArm",
-                        "LeftLowerArm",
-                        "LeftHand",
-                        "RightUpperArm",
-                        "RightLowerArm",
-                        "RightHand",
-                        "LeftUpperLeg",
-                        "LeftLowerLeg",
-                        "LeftFoot",
-                        "RightUpperLeg",
-                        "RightLowerLeg",
-                        "RightFoot",
+                        UpperTorso = "UpperTorso",
+                        LowerTorso = "LowerTorso",
+                        LeftUpperArm = "LeftUpperArm",
+                        LeftLowerArm = "LeftLowerArm",
+                        LeftHand = "LeftHand",
+                        RightUpperArm = "RightUpperArm",
+                        RightLowerArm = "RightLowerArm",
+                        RightHand = "RightHand",
+                        LeftUpperLeg = "LeftUpperLeg",
+                        LeftLowerLeg = "LeftLowerLeg",
+                        LeftFoot = "LeftFoot",
+                        RightUpperLeg = "RightUpperLeg",
+                        RightLowerLeg = "RightLowerLeg",
+                        RightFoot = "RightFoot",
                     }
                     local positions = {}
                     local all_parts_valid = true
-                    for _, v in pairs(get_parts) do
-                        if not character:FindFirstChild(v) then
-                            all_parts_valid = false
-                            break
-                        end
-                        local world_pos = character[v].Position
-                        local screenPos, onScreen = camera:WorldToViewportPoint(world_pos)
-                        if onScreen and screenPos.Z > 0 then
-                            positions[v] = Vector2.new(screenPos.X, screenPos.Y)
+                    for _, detectable_part in pairs(get_parts) do
+                        local part = character:FindFirstChild(detectable_part)
+                        if part then
+                            local world_pos = part.Position
+                            local screenPos, onScreen = camera:WorldToViewportPoint(world_pos)
+                            if onScreen and screenPos.Z > 0 then
+                                positions[detectable_part] = Vector2.new(screenPos.X, screenPos.Y)
+                            else
+                                all_parts_valid = false
+                                break
+                            end
                         else
                             all_parts_valid = false
                             break
@@ -1184,6 +1244,8 @@ local success, err = pcall(function()
                     end
                 end
             end
+            -- Anti-Ban: Случайная задержка
+            task.wait(getgenv().sigma_hook.anti_ban.random_delay())
         end
     end
 
@@ -1203,81 +1265,6 @@ local success, err = pcall(function()
         end
     end
 
-    -- Anti-Ban Logic (Disabled for compatibility)
-    --[[
-    local blocked_remotes = {}
-    local old_get_service
-    if hookfunction then
-        old_get_service = hookfunction(game.GetService, function(self, service)
-            if not checkcaller() then
-                return game:FindService(service) or error("Service not found: " .. tostring(service))
-            end
-            return old_get_service(self, service)
-        end)
-    end
-    local old_checkcaller
-    if hookfunction and checkcaller then
-        old_checkcaller = hookfunction(checkcaller, function() return true end)
-    end
-    local old_index
-    if hookmetamethod then
-        old_index = hookmetamethod(game, "__index", function(self, key)
-            if not checkcaller() and self:IsA("Humanoid") then
-                if key == "WalkSpeed" then return 16 elseif key == "Health" then return self.MaxHealth end
-            end
-            if not checkcaller() and key == "GetService" then
-                return function(class) return game:FindService(class) or error("Service not found: " .. tostring(class)) end
-            end
-            return old_index(self, key)
-        end)
-    end
-    local old_newindex
-    if hookmetamethod then
-        old_newindex = hookmetamethod(game, "__newindex", function(self, key, value)
-            if not checkcaller() and self:IsA("Humanoid") and (key == "WalkSpeed" or key == "Health") then return end
-            return old_newindex(self, key, value)
-        end)
-    end
-    local old_anti_ban_namecall
-    if hookmetamethod then
-        old_anti_ban_namecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if not checkcaller() then
-                if method == "Kick" then
-                    library:SendNotification("Blocked Kick attempt", 6)
-                    return
-                elseif method == "FireServer" and self:IsA("RemoteEvent") then
-                    if self.Name:lower():match("cheat") or self.Name:lower():match("exploit") or self.Name:lower():match("ban") then
-                        blocked_remotes[self.Name] = (blocked_remotes[self.Name] or 0) + 1
-                        library:SendNotification("Blocked RemoteEvent: " .. self.Name, 6)
-                        return
-                    end
-                elseif method == "InvokeServer" and self:IsA("RemoteFunction") then
-                    if self.Name:lower():match("cheat") or self.Name:lower():match("exploit") or self.Name:lower():match("ban") then
-                        blocked_remotes[self.Name] = (blocked_remotes[self.Name] or 0) + 1
-                        library:SendNotification("Blocked RemoteFunction: " .. self.Name, 6)
-                        return
-                    end
-                end
-            end
-            return old_anti_ban_namecall(self, ...)
-        end)
-    end
-    local function disable_anti_cheat_remotes()
-        for _, remote in pairs(game:GetDescendants()) do
-            if (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) and
-               (remote.Name:lower():match("cheat") or remote.Name:lower():match("exploit") or remote.Name:lower():match("ban")) then
-                pcall(function()
-                    remote.Name = "Disabled_" .. remote.Name
-                    remote.Parent = nil
-                end)
-                library:SendNotification("Disabled anti-cheat remote: " .. remote.Name, 6)
-            end
-        end
-    end
-    disable_anti_cheat_remotes()
-    --]]
-
     -- Initialize ESP for existing players
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= local_player then create_espp(player) end
@@ -1289,6 +1276,31 @@ local success, err = pcall(function()
         remove_esp(player)
     end)
 
+    -- Anti-Ban: Очистка кэша Roblox
+    local function clear_roblox_cache()
+        pcall(function()
+            local path = game:GetService("FileSystemService"):GetAppDataPath()
+            local roblox_folder = path .. "\\Roblox"
+            game:GetService("FileSystemService"):RemoveFolder(roblox_folder)
+        end)
+    end
+
+    -- Anti-Ban: Подмена сетевых вызовов
+    local oldFireServer = Instance.new("RemoteEvent").FireServer
+    local oldInvokeServer = Instance.new("RemoteFunction").InvokeServer
+    local function spoof_network_call(method, remote, ...)
+        local args = {...}
+        local spoofed_id = getgenv().sigma_hook.anti_ban.spoof_id
+        table.insert(args, 1, spoofed_id)
+        return method(remote, unpack(args))
+    end
+    hookfunction(Instance.new("RemoteEvent").FireServer, function(remote, ...)
+        return spoof_network_call(oldFireServer, remote, ...)
+    end)
+    hookfunction(Instance.new("RemoteFunction").InvokeServer, function(remote, ...)
+        return spoof_network_call(oldInvokeServer, remote, ...)
+    end)
+
     -- Update everything every frame
     RunService.RenderStepped:Connect(function(deltaTime)
         update_esp()
@@ -1298,14 +1310,15 @@ local success, err = pcall(function()
         update_free_cam()
         update_third_person()
         update_camera()
-        update_speed_hack()
         update_noclip()
         update_fov_circle()
+        update_underground()
     end)
 
     -- Cleanup on script end
     game:BindToClose(function()
         for player, _ in pairs(esp.drawings) do remove_esp(player) end
+        for _, drawing in pairs(bot_drawings) do drawing:Remove() end
         if fly_hack.velocity and fly_hack.velocity.Parent then fly_hack.velocity:Destroy() end
         if remake.startReplica then remake.startReplica:Destroy() end
         if remake.distanceText then remake.distanceText:Remove() end
@@ -1313,8 +1326,11 @@ local success, err = pcall(function()
         if remake.character and remake.character:FindFirstChild("HumanoidRootPart") then
             remake.character.HumanoidRootPart.Anchored = false
         end
-        if speed_hack.speedhack and speed_hack.speedhack.Parent then speed_hack.speedhack:Destroy() end
         if fov_circle.FieldOfView then fov_circle.FieldOfView:Destroy() end
+        if danceTrack then 
+            danceTrack:Stop()
+            danceTrack:Destroy()
+        end
         for _, connection in ipairs(activeConnections) do connection:Disconnect() end
         local camera = Workspace.CurrentCamera
         if camera then
@@ -1333,6 +1349,8 @@ local success, err = pcall(function()
                 character.HumanoidRootPart.Anchored = false
             end
         end
+        -- Anti-Ban: Очистка кэша при выходе
+        clear_roblox_cache()
     end)
 
     local Time = string.format("%."..tostring(Decimals).."f", os.clock() - Clock)
