@@ -780,7 +780,7 @@ do
 			Glow.Position = UDim2.new(0, -15, 0, -15)
 			Glow.Size = UDim2.new(1, 30, 1, 30)
 			Glow.ZIndex = 0
-			Glow.Image = "rbxassetid://79636323177681"
+			Glow.Image = "rbxassetid://5028857084"
 			Glow.ImageColor3 = Library.Accent
 			Glow.ScaleType = Enum.ScaleType.Slice
 			Glow.SliceCenter = Rect.new(24, 24, 276, 276)
