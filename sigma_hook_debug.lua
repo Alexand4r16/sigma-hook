@@ -20,10 +20,10 @@ do
 		DropdownOpen = false,
 		OptionListOpen = false,
 		Accent = startupArgs.color or Color3.fromRGB(0, 255, 255),
-		cheatname = startupArgs.cheatname or 'Title',
+		cheatname = startupArgs.cheatname or 'SigmaHook',
 		gamename = startupArgs.gamename or 'Unknown',
-		logo = startupArgs.logo or '110294417718078',
-		icon = startupArgs.icon or '110294417718078',
+		logo = startupArgs.logo or '79636323177681',
+		icon = startupArgs.icon or '79636323177681',
 		fileext = startupArgs.fileext or '.cfg',
 		Keys = {
 			[Enum.KeyCode.Space] = "Space",
