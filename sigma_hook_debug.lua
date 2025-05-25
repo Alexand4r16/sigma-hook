@@ -775,6 +775,19 @@ do
 			Library.Holder = Outline
 			Library.OldSize = Window.Size
 			--
+			local Logo = Instance.new("ImageLabel")
+    Logo.Name = "Logo"
+    Logo.Image = "rbxassetid://79636323177681"..Library.icon -- Используем rbxassetid://
+    Logo.ScaleType = Enum.ScaleType.Fit
+    Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Logo.BackgroundTransparency = 1
+    Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Logo.BorderSizePixel = 0
+    Logo.Position = UDim2.fromOffset(10, 10) -- Измените позицию, если нужно
+    Logo.Size = UDim2.fromOffset(50, 50) -- Уменьшите размер, если нужно
+    Logo.ZIndex = 60 -- Устанавливаем выше FadeThing
+    Logo.Parent = Holder
+			--
 			Glow.Name = "Glow"
 			Glow.BackgroundTransparency = 1
 			Glow.Position = UDim2.new(0, -15, 0, -15)
