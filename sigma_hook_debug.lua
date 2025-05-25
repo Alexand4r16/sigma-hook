@@ -22,8 +22,10 @@ do
 		Accent = startupArgs.color or Color3.fromRGB(0, 255, 255),
 		cheatname = startupArgs.cheatname or 'Title',
 		gamename = startupArgs.gamename or 'Unknown',
-		logo = startupArgs.logo or '79636323177681',
-		icon = startupArgs.icon or '79636323177681',
+		logo = '79636323177681', -- Updated logo
+		icon = '79636323177681', -- Updated icon
+		--logo = startupArgs.logo or '79636323177681',
+		--icon = startupArgs.icon or '79636323177681',
 		fileext = startupArgs.fileext or '.cfg',
 		Keys = {
 			[Enum.KeyCode.Space] = "Space",
