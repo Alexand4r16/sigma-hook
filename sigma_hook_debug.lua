@@ -229,6 +229,14 @@ do
 				end
 			end
 			--
+			function Library:Get(flag)
+    if flag and self.Flags[flag] ~= nil then
+        return self.Flags[flag]
+    end
+    warn("Flag '" .. tostring(flag) .. "' not found.")
+    return nil
+end
+			--
 			for i, v in pairs(Table2) do
 				if Flags[i] then
 					if typeof(Flags[i]) == "table" then
