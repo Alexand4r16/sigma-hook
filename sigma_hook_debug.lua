@@ -227,15 +227,7 @@ do
 					--
 					Table2[Table3[1]] = Value
 				end
-			end
-			--
-			function Library:Get(flag)
-    if flag and self.Flags[flag] ~= nil then
-        return self.Flags[flag]
-    end
-    warn("Flag '" .. tostring(flag) .. "' not found.")
-    return nil
-end
+			end	
 			--
 			for i, v in pairs(Table2) do
 				if Flags[i] then
