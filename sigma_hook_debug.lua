@@ -787,6 +787,8 @@ Logo.Position = UDim2.fromOffset(10, 10) -- Позиция
 Logo.Size = UDim2.fromOffset(50, 50) -- Размер
 Logo.ZIndex = 60 -- Устанавливаем выше других элементов
 Logo.Parent = Holder
+			print("Icon ID:", Library.icon)
+    print("Logo Image:", Logo.Image)
 			--
 			Glow.Name = "Glow"
 			Glow.BackgroundTransparency = 1
