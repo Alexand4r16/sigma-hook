@@ -775,27 +775,12 @@ do
 			Library.Holder = Outline
 			Library.OldSize = Window.Size
 			--
-			local Logo = Instance.new("ImageLabel")
-Logo.Name = "Logo"
-Logo.Image = "rbxassetid://79636323177681"..Library.icon -- Используем rbxassetid://
-Logo.ScaleType = Enum.ScaleType.Fit
-Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Logo.BackgroundTransparency = 1
-Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Logo.BorderSizePixel = 0
-Logo.Position = UDim2.fromOffset(10, 10) -- Позиция
-Logo.Size = UDim2.fromOffset(50, 50) -- Размер
-Logo.ZIndex = 60 -- Устанавливаем выше других элементов
-Logo.Parent = Holder
-			print("Icon ID:", Library.icon)
-    print("Logo Image:", Logo.Image)
-			--
 			Glow.Name = "Glow"
 			Glow.BackgroundTransparency = 1
 			Glow.Position = UDim2.new(0, -15, 0, -15)
 			Glow.Size = UDim2.new(1, 30, 1, 30)
 			Glow.ZIndex = 0
-			Glow.Image = "rbxassetid://5028857084"
+			Glow.Image = "rbxassetid://79636323177681"
 			Glow.ImageColor3 = Library.Accent
 			Glow.ScaleType = Enum.ScaleType.Slice
 			Glow.SliceCenter = Rect.new(24, 24, 276, 276)
